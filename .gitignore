@@ -1,2 +1,5 @@
 .copilot-tracking/
 evidence/logs/
+dist/
+node_modules/
+*.tsbuildinfo
