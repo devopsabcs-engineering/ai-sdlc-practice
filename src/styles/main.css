@@ -146,6 +146,105 @@ h3 {
   padding-bottom: 4rem;
   align-items: start;
 }
+.library {
+  margin-bottom: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+.library-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.secondary,
+.text-button {
+  border: 1px solid var(--blueberry);
+  border-radius: 7px;
+  color: var(--blueberry);
+  background: var(--surface);
+  font-weight: 700;
+}
+.secondary {
+  padding: 0.65rem 1rem;
+}
+.recipe-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+.library-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #f8faf8;
+}
+.library-item.selected {
+  border-color: var(--blueberry);
+  box-shadow: inset 4px 0 var(--blueberry);
+}
+.recipe-open {
+  min-width: 0;
+  padding: 0.75rem 0.85rem;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+}
+.recipe-open strong,
+.recipe-open span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recipe-open span {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.recipe-delete {
+  min-width: 44px;
+  padding: 0.5rem;
+  border: 0;
+  border-left: 1px solid var(--line);
+  color: var(--error);
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.recipe-open:hover,
+.recipe-delete:hover {
+  background: #edf2ef;
+}
+.library-empty {
+  margin-bottom: 0;
+  padding: 1rem;
+  color: var(--muted);
+  text-align: center;
+}
+.data-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.text-button {
+  display: inline-grid;
+  min-height: 44px;
+  padding: 0.6rem 0.8rem;
+  place-items: center;
+  font-size: 0.8rem;
+}
+.text-button.danger {
+  margin-left: auto;
+  border-color: var(--error);
+  color: var(--error);
+}
 .panel {
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -438,6 +537,9 @@ textarea {
   .workbench {
     grid-template-columns: 1fr;
   }
+  .recipe-list {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 560px) {
   .shell {
@@ -452,6 +554,9 @@ textarea {
   .panel-heading {
     display: block;
   }
+  .library-heading {
+    align-items: flex-start;
+  }
   .required-note {
     display: inline-block;
     margin-top: 0.8rem;
@@ -462,6 +567,9 @@ textarea {
   .serving-dial {
     margin-inline: -1.25rem;
     padding-inline: 1.25rem;
+  }
+  .text-button.danger {
+    margin-left: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

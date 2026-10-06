@@ -7,6 +7,15 @@ export interface Recipe {
   steps: string[];
 }
 
+export function recipeToDraft(recipe: Recipe): RecipeDraft {
+  return {
+    title: recipe.title,
+    baseServings: String(recipe.baseServings),
+    ingredients: recipe.ingredients.map((line) => line.original).join("\n"),
+    steps: recipe.steps.join("\n"),
+  };
+}
+
 export interface RecipeDraft {
   title: string;
   baseServings: string;

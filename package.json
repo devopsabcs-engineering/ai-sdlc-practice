@@ -9,6 +9,7 @@
     "lint": "node scripts/run-gate.mjs lint",
     "format": "prettier --write .",
     "unit": "vitest run",
+    "i18n-parity": "node scripts/check-i18n.mjs",
     "portable-os": "node scripts/check-portable.mjs"
   },
   "devDependencies": {

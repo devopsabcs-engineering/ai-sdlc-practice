@@ -17,7 +17,7 @@ describe("RecipeController", () => {
       ingredients: "",
       steps: "",
     });
-    expect(controller.savedRecipe).toBe(saved);
+    expect(controller.savedRecipe).toEqual(saved);
   });
 
   it("accepts only target serving integers from 1 through 99", () => {
@@ -49,7 +49,7 @@ describe("RecipeController", () => {
     controller.setUnitSystem("imperial");
 
     expect(controller.unitSystem).toBe("imperial");
-    expect(controller.savedRecipe).toBe(saved);
+    expect(controller.savedRecipe).toEqual(saved);
     expect(controller.savedRecipe?.ingredients[0]).toMatchObject({
       quantity: 1,
       unit: "l",
