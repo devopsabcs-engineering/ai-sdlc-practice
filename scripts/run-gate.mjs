@@ -5,6 +5,7 @@ const tools = {
   build: [
     ["../node_modules/typescript/bin/tsc", "-b"],
     ["../node_modules/vite/bin/vite.js", "build"],
+    ["./check-pwa.mjs"],
   ],
   lint: [
     ["../node_modules/eslint/bin/eslint.js", "."],

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Pinch">
+  <rect width="512" height="512" rx="112" fill="#243c73"/>
+  <path fill="#f7f1e7" d="M152 389V112h115c74 0 120 40 120 104 0 67-48 109-125 109h-53v64h-57Zm57-115h53c43 0 67-21 67-56 0-32-24-53-64-53h-56v109Z"/>
+  <circle cx="365" cy="365" r="32" fill="#d66b4c"/>
+</svg>
