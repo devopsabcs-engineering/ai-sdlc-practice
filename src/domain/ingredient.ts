@@ -8,6 +8,7 @@ export const supportedUnits = [
   "cup",
   "oz",
   "lb",
+  "fl oz",
 ] as const;
 
 export type SupportedUnit = (typeof supportedUnits)[number];
@@ -54,7 +55,19 @@ const unitAliases: Readonly<Record<string, SupportedUnit>> = {
   lbs: "lb",
   pound: "lb",
   pounds: "lb",
+  "fl oz": "fl oz",
+  "fl ounce": "fl oz",
+  "fl ounces": "fl oz",
+  "fluid ounce": "fl oz",
+  "fluid ounces": "fl oz",
+  "us fl oz": "fl oz",
+  "us fluid ounce": "fl oz",
+  "us fluid ounces": "fl oz",
 };
+
+const unitAliasEntries = Object.entries(unitAliases).sort(
+  ([left], [right]) => right.length - left.length,
+);
 
 interface QuantityMatch {
   amount: number;
@@ -94,12 +107,19 @@ export function parseIngredientLine(original: string): IngredientLine {
   const remainder = input.slice(quantity.length).trim();
   if (!remainder) return { kind: "unparsed", original };
 
-  const [firstToken = ""] = remainder.split(/\s+/, 1);
-  const normalizedToken = firstToken
-    .toLocaleLowerCase("en-US")
-    .replace(/[.,]$/, "");
-  const unit = unitAliases[normalizedToken] ?? null;
-  const name = unit ? remainder.slice(firstToken.length).trim() : remainder;
+  const normalizedRemainder = remainder.toLocaleLowerCase("en-US");
+  const alias = unitAliasEntries.find(([candidate]) => {
+    if (!normalizedRemainder.startsWith(candidate)) return false;
+    const boundary = normalizedRemainder[candidate.length];
+    return boundary === undefined || /[\s,.]/.test(boundary);
+  });
+  const unit = alias?.[1] ?? null;
+  const name = unit
+    ? remainder
+        .slice(alias![0].length)
+        .replace(/^[.,]\s*/, "")
+        .trim()
+    : remainder;
   if (!name) return { kind: "unparsed", original };
 
   return { kind: "parsed", original, quantity: quantity.amount, unit, name };

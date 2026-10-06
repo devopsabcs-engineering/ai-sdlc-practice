@@ -5,7 +5,9 @@ import {
   type RecipeDraft,
   type RecipeErrors,
 } from "./domain/recipe.ts";
+import type { SupportedUnit } from "./domain/ingredient.ts";
 import { formatQuantity } from "./ui/format-quantity.ts";
+import { convertToUnitSystem } from "./domain/unit-conversion.ts";
 
 const controller = new RecipeController();
 const root = document.querySelector<HTMLElement>("#main");
@@ -70,6 +72,11 @@ const status = document.querySelector<HTMLElement>("#status")!;
 const emptyPreview = document.querySelector<HTMLElement>("#empty-preview")!;
 const preview = document.querySelector<HTMLElement>("#recipe-preview")!;
 
+function formatAmount(quantity: number, unit: SupportedUnit | null): string {
+  const unitLabel = unit === "fl oz" ? "US fl oz" : unit;
+  return `${formatQuantity(quantity, unit)}${unitLabel ? ` ${unitLabel}` : ""}`;
+}
+
 function readDraft(): RecipeDraft {
   const data = new FormData(form);
   return {
@@ -109,7 +116,12 @@ function renderRecipe(announce = false) {
         return `<li class="ingredient unparsed"><span class="amount">—</span><span><span class="ingredient-name">${escapeHtml(line.original)}</span><small>Not scalable · kept as written</small></span></li>`;
       }
       const scaled = scaleQuantity(line.quantity, recipe.baseServings, target);
-      const amount = `${formatQuantity(scaled, line.unit)}${line.unit ? ` ${line.unit}` : ""}`;
+      const displayed = convertToUnitSystem(
+        scaled,
+        line.unit,
+        controller.unitSystem,
+      );
+      const amount = formatAmount(displayed.quantity, displayed.unit);
       return `<li class="ingredient" data-ingredient-index="${index}"><span class="amount">${amount}</span><span class="ingredient-name">${escapeHtml(line.name)}</span></li>`;
     })
     .join("");
@@ -125,6 +137,11 @@ function renderRecipe(announce = false) {
       <div><p class="eyebrow">Saved recipe</p><h2 id="preview-title">${escapeHtml(recipe.title)}</h2></div>
       <span class="saved-badge">Saved</span>
     </div>
+    <fieldset class="unit-switcher">
+      <legend>Measurement system</legend>
+      <label><input type="radio" name="unit-system" value="metric" ${controller.unitSystem === "metric" ? "checked" : ""}> Metric</label>
+      <label><input type="radio" name="unit-system" value="imperial" ${controller.unitSystem === "imperial" ? "checked" : ""}> Imperial</label>
+    </fieldset>
     <div class="serving-dial">
       <label for="target-servings">Scale recipe</label>
       <div class="dial-controls">
@@ -176,6 +193,18 @@ function renderRecipe(announce = false) {
     ?.addEventListener("input", (event) => {
       changeTarget(Number((event.currentTarget as HTMLInputElement).value));
     });
+  preview
+    .querySelectorAll<HTMLInputElement>('input[name="unit-system"]')
+    .forEach((control) => {
+      control.addEventListener("change", () => {
+        if (!control.checked) return;
+        controller.setUnitSystem(
+          control.value === "imperial" ? "imperial" : "metric",
+        );
+        updateScaledPreview(false);
+        status.textContent = `Measurements shown in ${controller.unitSystem} units.`;
+      });
+    });
   if (announce)
     status.textContent = `Recipe scaled to ${target} ${target === 1 ? "serving" : "servings"}.`;
 }
@@ -206,7 +235,12 @@ function updateScaledPreview(announce: boolean) {
     );
     if (!amount) return;
     const scaled = scaleQuantity(line.quantity, recipe.baseServings, target);
-    amount.textContent = `${formatQuantity(scaled, line.unit)}${line.unit ? ` ${line.unit}` : ""}`;
+    const displayed = convertToUnitSystem(
+      scaled,
+      line.unit,
+      controller.unitSystem,
+    );
+    amount.textContent = formatAmount(displayed.quantity, displayed.unit);
   });
 
   if (announce) {

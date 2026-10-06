@@ -8,6 +8,7 @@ describe("parseIngredientLine", () => {
     ["1/2 cup sugar", 0.5, "cup", "sugar"],
     ["1 1/2 tbsp oil", 1.5, "tbsp", "oil"],
     ["250 grams flour", 250, "g", "flour"],
+    ["8 US fl oz stock", 8, "fl oz", "stock"],
   ])("parses %s", (line, quantity, unit, name) => {
     expect(parseIngredientLine(line)).toEqual({
       kind: "parsed",

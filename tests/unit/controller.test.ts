@@ -35,4 +35,24 @@ describe("RecipeController", () => {
     expect(() => controller.setTargetServings(100)).toThrow(RangeError);
     expect(controller.targetServings).toBe(99);
   });
+
+  it("tracks the display system without changing the saved recipe", () => {
+    const controller = new RecipeController();
+    controller.save({
+      title: "Soup",
+      baseServings: "2",
+      ingredients: "1 l stock",
+      steps: "Simmer.",
+    });
+    const saved = controller.savedRecipe;
+
+    controller.setUnitSystem("imperial");
+
+    expect(controller.unitSystem).toBe("imperial");
+    expect(controller.savedRecipe).toBe(saved);
+    expect(controller.savedRecipe?.ingredients[0]).toMatchObject({
+      quantity: 1,
+      unit: "l",
+    });
+  });
 });

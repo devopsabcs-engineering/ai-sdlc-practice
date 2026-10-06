@@ -5,10 +5,12 @@ import {
   type RecipeDraft,
   type RecipeValidation,
 } from "../domain/recipe.ts";
+import type { UnitSystem } from "../domain/unit-conversion.ts";
 
 export class RecipeController {
   #saved: Recipe | null = null;
   #targetServings = 1;
+  #unitSystem: UnitSystem = "metric";
 
   get savedRecipe() {
     return this.#saved;
@@ -16,6 +18,10 @@ export class RecipeController {
 
   get targetServings() {
     return this.#targetServings;
+  }
+
+  get unitSystem() {
+    return this.#unitSystem;
   }
 
   save(draft: RecipeDraft): RecipeValidation {
@@ -31,5 +37,9 @@ export class RecipeController {
     if (!this.#saved) return;
     scaleQuantity(1, this.#saved.baseServings, value);
     this.#targetServings = value;
+  }
+
+  setUnitSystem(value: UnitSystem) {
+    this.#unitSystem = value;
   }
 }

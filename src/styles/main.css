@@ -172,6 +172,47 @@ h3 {
   font-size: 0.72rem;
   white-space: nowrap;
 }
+.unit-switcher {
+  display: flex;
+  width: fit-content;
+  margin: 0 0 1.25rem auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #edf2ef;
+}
+.unit-switcher legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.unit-switcher label {
+  position: relative;
+  min-height: 44px;
+  padding: 0.62rem 0.85rem;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.unit-switcher label:has(input:checked) {
+  color: var(--blueberry);
+  background: var(--surface);
+  box-shadow: 0 1px 4px rgba(23, 36, 62, 0.14);
+}
+.unit-switcher input {
+  position: absolute;
+  width: 1px;
+  min-height: 1px;
+  opacity: 0;
+}
+.unit-switcher label:has(input:focus-visible) {
+  outline: 3px solid #d08137;
+  outline-offset: 2px;
+}
 .saved-badge {
   color: #174f3e;
   background: #d9eee7;
