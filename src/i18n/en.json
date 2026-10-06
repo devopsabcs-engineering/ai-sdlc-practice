@@ -72,5 +72,15 @@
   "shopping.emptyBody": "Add the displayed ingredients from a recipe when you’re ready to shop.",
   "shopping.checked": "{name} checked.",
   "shopping.unchecked": "{name} unchecked.",
-  "shopping.cleared": "{count} checked items cleared."
+  "shopping.cleared": "{count} checked items cleared.",
+  "cook.start": "Start cook mode",
+  "cook.mode": "Cook mode",
+  "cook.close": "Close",
+  "cook.previous": "Previous",
+  "cook.next": "Next",
+  "cook.finish": "Finish",
+  "cook.progress": "Step {current} of {total}",
+  "cook.wakeActive": "The screen will stay awake while cook mode is open.",
+  "cook.wakeFallback": "Screen wake lock isn’t available. Keep this screen open while cooking.",
+  "cook.stepChanged": "Step {current} of {total}."
 }

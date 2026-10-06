@@ -72,5 +72,15 @@
   "shopping.emptyBody": "Ajoutez les ingrédients affichés d’une recette lorsque vous êtes prêt à faire les courses.",
   "shopping.checked": "{name} coché.",
   "shopping.unchecked": "{name} décoché.",
-  "shopping.cleared": "{count} éléments cochés effacés."
+  "shopping.cleared": "{count} éléments cochés effacés.",
+  "cook.start": "Démarrer le mode cuisine",
+  "cook.mode": "Mode cuisine",
+  "cook.close": "Fermer",
+  "cook.previous": "Précédent",
+  "cook.next": "Suivant",
+  "cook.finish": "Terminer",
+  "cook.progress": "Étape {current} sur {total}",
+  "cook.wakeActive": "L’écran restera allumé tant que le mode cuisine est ouvert.",
+  "cook.wakeFallback": "Le maintien de l’écran allumé n’est pas disponible. Gardez cet écran ouvert pendant la cuisson.",
+  "cook.stepChanged": "Étape {current} sur {total}."
 }

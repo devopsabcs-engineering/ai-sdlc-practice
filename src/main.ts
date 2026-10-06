@@ -1,5 +1,6 @@
 import "./styles/main.css";
 import { RecipeController } from "./app/recipe-controller.ts";
+import { CookController } from "./app/cook-controller.ts";
 import {
   recipeToDraft,
   scaleQuantity,
@@ -10,8 +11,16 @@ import type { SupportedUnit } from "./domain/ingredient.ts";
 import { convertToUnitSystem } from "./domain/unit-conversion.ts";
 import { createTranslator } from "./i18n/messages.ts";
 import { formatQuantity } from "./ui/format-quantity.ts";
+import { cookKeyboardAction, cookSwipeAction } from "./ui/cook-navigation.ts";
+import {
+  ScreenWakeLock,
+  type WakeLockNavigatorPort,
+} from "./infrastructure/wake-lock.ts";
 
 const controller = new RecipeController();
+const cookController = new CookController(
+  new ScreenWakeLock(navigator as WakeLockNavigatorPort),
+);
 const t = createTranslator(controller.locale);
 const root = document.querySelector<HTMLElement>("#main");
 if (!root) throw new Error("Application root not found.");
@@ -96,6 +105,26 @@ root.innerHTML = `
     <div id="shopping-list"></div>
   </section>
   <div id="status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <dialog id="cook-dialog" class="cook-dialog" aria-labelledby="cook-title" aria-describedby="cook-progress cook-wake-note">
+    <div class="cook-shell">
+      <header class="cook-header">
+        <div>
+          <p class="eyebrow">${t("cook.mode")}</p>
+          <h2 id="cook-title"></h2>
+        </div>
+        <button id="close-cook" class="secondary" type="button" autofocus>${t("cook.close")}</button>
+      </header>
+      <section class="cook-step" aria-labelledby="cook-progress">
+        <p id="cook-step-text"></p>
+        <p id="cook-progress" class="cook-progress"></p>
+      </section>
+      <footer class="cook-footer">
+        <button id="previous-step" class="secondary" type="button">${t("cook.previous")}</button>
+        <p id="cook-wake-note" class="cook-wake-note" role="status" aria-live="polite">${t("cook.wakeActive")}</p>
+        <button id="next-step" class="primary" type="button">${t("cook.next")}</button>
+      </footer>
+    </div>
+  </dialog>
 `;
 
 const form = document.querySelector<HTMLFormElement>("#recipe-form")!;
@@ -106,6 +135,15 @@ const recipeList = document.querySelector<HTMLElement>("#recipe-list")!;
 const shoppingList = document.querySelector<HTMLElement>("#shopping-list")!;
 const clearChecked =
   document.querySelector<HTMLButtonElement>("#clear-checked")!;
+const cookDialog = document.querySelector<HTMLDialogElement>("#cook-dialog")!;
+const cookTitle = document.querySelector<HTMLElement>("#cook-title")!;
+const cookStepText = document.querySelector<HTMLElement>("#cook-step-text")!;
+const cookProgress = document.querySelector<HTMLElement>("#cook-progress")!;
+const cookWakeNote = document.querySelector<HTMLElement>("#cook-wake-note")!;
+const previousStep =
+  document.querySelector<HTMLButtonElement>("#previous-step")!;
+const nextStep = document.querySelector<HTMLButtonElement>("#next-step")!;
+let cookOpener: HTMLButtonElement | null = null;
 
 function escapeHtml(value: string): string {
   const element = document.createElement("span");
@@ -294,6 +332,7 @@ function renderRecipe(announce = false): void {
       <section aria-labelledby="method-title">
         <h3 id="method-title">${t("preview.method")}</h3>
         <ol class="steps">${steps}</ol>
+        <button id="start-cook" class="primary start-cook" type="button">${t("cook.start")}</button>
       </section>
     </div>`;
   emptyPreview.hidden = true;
@@ -347,12 +386,51 @@ function renderRecipe(announce = false): void {
     renderShopping();
     status.textContent = t("shopping.added", { count });
   });
+  preview
+    .querySelector<HTMLButtonElement>("#start-cook")
+    ?.addEventListener("click", (event) => {
+      cookOpener = event.currentTarget as HTMLButtonElement;
+      const acquisition = cookController.start(recipe.steps);
+      cookTitle.textContent = recipe.title;
+      cookWakeNote.textContent = t("cook.wakeActive");
+      cookWakeNote.classList.remove("fallback");
+      renderCookStep(false);
+      cookDialog.showModal();
+      void acquisition.then((acquired) => {
+        if (!acquired && cookDialog.open) showWakeLockFallback();
+      });
+    });
   if (announce) {
     status.textContent = t("status.scaled", {
       count: target,
       servings: servingWord(target),
     });
   }
+}
+
+function renderCookStep(announce = true): void {
+  cookStepText.textContent = cookController.step;
+  cookProgress.textContent = t("cook.progress", {
+    current: cookController.stepIndex + 1,
+    total: cookController.stepCount,
+  });
+  previousStep.disabled = cookController.isFirst;
+  nextStep.textContent = t(cookController.isLast ? "cook.finish" : "cook.next");
+  if (announce) {
+    status.textContent = t("cook.stepChanged", {
+      current: cookController.stepIndex + 1,
+      total: cookController.stepCount,
+    });
+  }
+}
+
+function showWakeLockFallback(): void {
+  cookWakeNote.textContent = t("cook.wakeFallback");
+  cookWakeNote.classList.add("fallback");
+}
+
+function closeCookMode(): void {
+  if (cookDialog.open) cookDialog.close();
 }
 
 function updateScaledPreview(announce: boolean): void {
@@ -507,6 +585,66 @@ clearChecked.addEventListener("click", () => {
   const count = controller.clearCheckedShoppingItems();
   renderShopping();
   status.textContent = t("shopping.cleared", { count });
+});
+
+document.querySelector("#close-cook")?.addEventListener("click", closeCookMode);
+
+previousStep.addEventListener("click", () => {
+  if (cookController.previous()) renderCookStep();
+});
+
+nextStep.addEventListener("click", () => {
+  if (cookController.next() === "finished") {
+    closeCookMode();
+    return;
+  }
+  renderCookStep();
+});
+
+cookDialog.addEventListener("keydown", (event) => {
+  const action = cookKeyboardAction(event.key);
+  if (!action) return;
+  event.preventDefault();
+  (action === "next" ? nextStep : previousStep).click();
+});
+
+let touchStart: { x: number; y: number } | null = null;
+cookDialog.addEventListener(
+  "touchstart",
+  (event) => {
+    const touch = event.changedTouches[0];
+    touchStart = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  },
+  { passive: true },
+);
+cookDialog.addEventListener(
+  "touchend",
+  (event) => {
+    const touch = event.changedTouches[0];
+    if (!touchStart || !touch) return;
+    const action = cookSwipeAction(touchStart, {
+      x: touch.clientX,
+      y: touch.clientY,
+    });
+    touchStart = null;
+    if (action) (action === "next" ? nextStep : previousStep).click();
+  },
+  { passive: true },
+);
+cookDialog.addEventListener("touchcancel", () => {
+  touchStart = null;
+});
+
+cookDialog.addEventListener("close", () => {
+  void cookController.stop();
+  cookOpener?.focus();
+  cookOpener = null;
+});
+
+document.addEventListener("visibilitychange", () => {
+  void cookController.handleVisibility(document.hidden).then((acquired) => {
+    if (!acquired && cookDialog.open) showWakeLockFallback();
+  });
 });
 
 renderSelection();
