@@ -88,6 +88,13 @@ root.innerHTML = `
       <div id="recipe-preview" hidden></div>
     </section>
   </div>
+  <section class="panel shopping" aria-labelledby="shopping-title">
+    <div class="shopping-heading">
+      <div><p class="eyebrow">${t("shopping.eyebrow")}</p><h2 id="shopping-title">${t("shopping.title")}</h2></div>
+      <button id="clear-checked" class="secondary" type="button">${t("shopping.clearChecked")}</button>
+    </div>
+    <div id="shopping-list"></div>
+  </section>
   <div id="status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 `;
 
@@ -96,6 +103,9 @@ const status = document.querySelector<HTMLElement>("#status")!;
 const emptyPreview = document.querySelector<HTMLElement>("#empty-preview")!;
 const preview = document.querySelector<HTMLElement>("#recipe-preview")!;
 const recipeList = document.querySelector<HTMLElement>("#recipe-list")!;
+const shoppingList = document.querySelector<HTMLElement>("#shopping-list")!;
+const clearChecked =
+  document.querySelector<HTMLButtonElement>("#clear-checked")!;
 
 function escapeHtml(value: string): string {
   const element = document.createElement("span");
@@ -105,7 +115,7 @@ function escapeHtml(value: string): string {
 
 function formatAmount(quantity: number, unit: SupportedUnit | null): string {
   const unitLabel = unit === "fl oz" ? "US fl oz" : unit;
-  return `${formatQuantity(quantity, unit)}${unitLabel ? ` ${unitLabel}` : ""}`;
+  return `${formatQuantity(quantity, unit, controller.locale)}${unitLabel ? ` ${unitLabel}` : ""}`;
 }
 
 function servingWord(count: number): string {
@@ -166,6 +176,7 @@ function renderLibrary(): void {
     recipeList.innerHTML = `<p class="library-empty">${t("library.empty")}</p>`;
     return;
   }
+
   recipeList.innerHTML = controller.recipes
     .map((recipe) => {
       const title = recipe.title[controller.locale];
@@ -180,6 +191,40 @@ function renderLibrary(): void {
         </article>`;
     })
     .join("");
+}
+
+function renderShopping(): void {
+  const items = controller.shoppingItems;
+  clearChecked.disabled = !items.some(({ checked }) => checked);
+  if (items.length === 0) {
+    shoppingList.innerHTML = `
+      <div class="shopping-empty">
+        <span aria-hidden="true">✓</span>
+        <p><strong>${t("shopping.emptyTitle")}</strong><br>${t("shopping.emptyBody")}</p>
+      </div>`;
+    return;
+  }
+  shoppingList.innerHTML = `
+    <ul class="shopping-items">
+      ${items
+        .map((item) => {
+          const name = item.name[controller.locale];
+          const amount =
+            item.quantity === null
+              ? ""
+              : formatAmount(item.quantity, item.unit);
+          return `
+            <li class="${item.checked ? "checked" : ""}">
+              <label>
+                <input type="checkbox" data-shopping-id="${escapeHtml(item.id)}" ${item.checked ? "checked" : ""}>
+                <span class="shopping-check" aria-hidden="true"></span>
+                <span class="shopping-name">${escapeHtml(name)}</span>
+                ${amount ? `<span class="shopping-amount">${escapeHtml(amount)}</span>` : ""}
+              </label>
+            </li>`;
+        })
+        .join("")}
+    </ul>`;
 }
 
 function showEmptyPreview(): void {
@@ -240,7 +285,10 @@ function renderRecipe(announce = false): void {
     </div>
     <div class="recipe-content">
       <section aria-labelledby="ingredients-title">
-        <h3 id="ingredients-title">${t("preview.ingredients")}</h3>
+        <div class="ingredients-heading">
+          <h3 id="ingredients-title">${t("preview.ingredients")}</h3>
+          <button id="add-to-shopping" class="secondary compact" type="button">${t("shopping.add")}</button>
+        </div>
         <ul class="ingredients">${ingredientItems}</ul>
       </section>
       <section aria-labelledby="method-title">
@@ -294,6 +342,11 @@ function renderRecipe(announce = false): void {
         });
       });
     });
+  preview.querySelector("#add-to-shopping")?.addEventListener("click", () => {
+    const count = controller.addCurrentIngredients();
+    renderShopping();
+    status.textContent = t("shopping.added", { count });
+  });
   if (announce) {
     status.textContent = t("status.scaled", {
       count: target,
@@ -418,6 +471,7 @@ document
       return;
     }
     renderSelection();
+    renderShopping();
     status.textContent = t("library.imported");
   });
 
@@ -425,8 +479,36 @@ document.querySelector("#clear-data")?.addEventListener("click", () => {
   if (!window.confirm(t("library.clearConfirm"))) return;
   controller.clearAll();
   renderSelection();
+  renderShopping();
   status.textContent = t("library.cleared");
 });
 
+shoppingList.addEventListener("change", (event) => {
+  const checkbox = (event.target as HTMLElement).closest<HTMLInputElement>(
+    'input[type="checkbox"][data-shopping-id]',
+  );
+  if (!checkbox?.dataset.shoppingId) return;
+  controller.setShoppingItemChecked(
+    checkbox.dataset.shoppingId,
+    checkbox.checked,
+  );
+  renderShopping();
+  status.textContent = t(
+    checkbox.checked ? "shopping.checked" : "shopping.unchecked",
+    {
+      name:
+        checkbox.closest("label")?.querySelector(".shopping-name")
+          ?.textContent ?? "",
+    },
+  );
+});
+
+clearChecked.addEventListener("click", () => {
+  const count = controller.clearCheckedShoppingItems();
+  renderShopping();
+  status.textContent = t("shopping.cleared", { count });
+});
+
 renderSelection();
+renderShopping();
 if (controller.recoveredOnLoad) status.textContent = t("library.recovered");

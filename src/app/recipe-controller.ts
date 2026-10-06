@@ -11,7 +11,12 @@ import {
   type RecipeDraft,
   type RecipeValidation,
 } from "../domain/recipe.ts";
-import type { UnitSystem } from "../domain/unit-conversion.ts";
+import { addShoppingCandidates } from "../domain/shopping.ts";
+import {
+  convertToUnitSystem,
+  getUnitDimension,
+  type UnitSystem,
+} from "../domain/unit-conversion.ts";
 import {
   StateRepository,
   type StoragePort,
@@ -99,6 +104,10 @@ export class RecipeController {
 
   get unitSystem() {
     return this.#state.preferences.unitSystem;
+  }
+
+  get shoppingItems() {
+    return this.#state.shoppingItems;
   }
 
   save(draft: RecipeDraft): RecipeValidation {
@@ -189,6 +198,78 @@ export class RecipeController {
       ...this.#state,
       preferences: { ...this.#state.preferences, unitSystem: value },
     });
+  }
+
+  addCurrentIngredients(): number {
+    if (this.#creating) return 0;
+    const recipe = this.#state.recipes.find(
+      ({ id }) => id === this.#state.preferences.selectedRecipeId,
+    );
+    if (!recipe) return 0;
+    const candidates = recipe.ingredients.map((line) => {
+      if (line.kind === "unparsed") {
+        return {
+          name: line.original,
+          quantity: null,
+          unit: null,
+          canonicalDimension: "unknown" as const,
+        };
+      }
+      const scaled = scaleQuantity(
+        line.quantity,
+        recipe.baseServings,
+        this.#targetServings,
+      );
+      const displayed = convertToUnitSystem(scaled, line.unit, this.unitSystem);
+      return {
+        name: line.name,
+        quantity: displayed.quantity,
+        unit: displayed.unit,
+        canonicalDimension: displayed.unit
+          ? getUnitDimension(displayed.unit)
+          : ("count" as const),
+      };
+    });
+    const usedIds = new Set(this.#state.shoppingItems.map(({ id }) => id));
+    const createId = () => {
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const candidate = this.uuid();
+        if (candidate && !usedIds.has(candidate)) {
+          usedIds.add(candidate);
+          return candidate;
+        }
+      }
+      throw new Error("Unable to create a unique shopping item identifier.");
+    };
+    this.#commit({
+      ...this.#state,
+      shoppingItems: addShoppingCandidates(
+        this.#state.shoppingItems,
+        candidates,
+        createId,
+      ),
+    });
+    return candidates.length;
+  }
+
+  setShoppingItemChecked(id: string, checked: boolean): boolean {
+    if (!this.#state.shoppingItems.some((item) => item.id === id)) return false;
+    this.#commit({
+      ...this.#state,
+      shoppingItems: this.#state.shoppingItems.map((item) =>
+        item.id === id ? { ...item, checked } : item,
+      ),
+    });
+    return true;
+  }
+
+  clearCheckedShoppingItems(): number {
+    const shoppingItems = this.#state.shoppingItems.filter(
+      ({ checked }) => !checked,
+    );
+    const removed = this.#state.shoppingItems.length - shoppingItems.length;
+    if (removed > 0) this.#commit({ ...this.#state, shoppingItems });
+    return removed;
   }
 
   exportJson(): string {

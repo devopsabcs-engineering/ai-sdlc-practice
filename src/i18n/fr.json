@@ -62,5 +62,15 @@
   "status.servingsError": "Le nombre de portions doit être un entier de 1 à 99.",
   "status.scaled": "Recette redimensionnée à {count} {servings}.",
   "status.units": "Mesures affichées en unités {system}.",
-  "status.saved": "{title} enregistrée."
+  "status.saved": "{title} enregistrée.",
+  "shopping.eyebrow": "À votre rythme",
+  "shopping.title": "Liste de courses",
+  "shopping.add": "Ajouter les ingrédients affichés",
+  "shopping.added": "{count} ingrédients affichés ajoutés à la liste de courses.",
+  "shopping.clearChecked": "Effacer les éléments cochés",
+  "shopping.emptyTitle": "Votre liste est vide",
+  "shopping.emptyBody": "Ajoutez les ingrédients affichés d’une recette lorsque vous êtes prêt à faire les courses.",
+  "shopping.checked": "{name} coché.",
+  "shopping.unchecked": "{name} décoché.",
+  "shopping.cleared": "{count} éléments cochés effacés."
 }

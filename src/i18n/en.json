@@ -62,5 +62,15 @@
   "status.servingsError": "Servings must be a whole number from 1 to 99.",
   "status.scaled": "Recipe scaled to {count} {servings}.",
   "status.units": "Measurements shown in {system} units.",
-  "status.saved": "{title} saved."
+  "status.saved": "{title} saved.",
+  "shopping.eyebrow": "Ready when you are",
+  "shopping.title": "Shopping checklist",
+  "shopping.add": "Add displayed ingredients",
+  "shopping.added": "{count} displayed ingredients added to the shopping checklist.",
+  "shopping.clearChecked": "Clear checked",
+  "shopping.emptyTitle": "Your checklist is clear",
+  "shopping.emptyBody": "Add the displayed ingredients from a recipe when you’re ready to shop.",
+  "shopping.checked": "{name} checked.",
+  "shopping.unchecked": "{name} unchecked.",
+  "shopping.cleared": "{count} checked items cleared."
 }

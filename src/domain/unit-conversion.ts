@@ -46,6 +46,21 @@ const units: Readonly<Record<SupportedUnit, UnitDefinition>> = {
   },
 };
 
+export function getUnitDimension(unit: SupportedUnit): UnitDimension {
+  return units[unit].dimension;
+}
+
+export function getUnitSystem(unit: SupportedUnit): UnitSystem {
+  return units[unit].system;
+}
+
+export function toCanonicalQuantity(
+  quantity: number,
+  unit: SupportedUnit,
+): number {
+  return quantity * units[unit].canonicalFactor;
+}
+
 export interface DisplayQuantity {
   quantity: number;
   unit: SupportedUnit | null;
@@ -68,7 +83,7 @@ export function convertQuantity(
   };
 }
 
-function selectDisplayUnit(
+export function selectDisplayUnit(
   canonicalQuantity: number,
   dimension: UnitDimension,
   system: UnitSystem,
