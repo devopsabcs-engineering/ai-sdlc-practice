@@ -1,6 +1,14 @@
 {
   "app.description": "Create, save, and scale recipes on this device.",
   "app.tagline": "Recipes, made to measure.",
+  "preferences.language": "Language",
+  "preferences.english": "English",
+  "preferences.french": "Français",
+  "preferences.theme": "Use {theme} theme",
+  "preferences.light": "light",
+  "preferences.dark": "dark",
+  "preferences.languageChanged": "Language changed to English.",
+  "preferences.themeChanged": "{theme} theme enabled.",
   "intro.eyebrow": "Recipe workbench",
   "intro.title": "Make the recipe fit the table.",
   "intro.lede": "Write it once, then choose exactly how many people you’re feeding.",
@@ -82,5 +90,9 @@
   "cook.progress": "Step {current} of {total}",
   "cook.wakeActive": "The screen will stay awake while cook mode is open.",
   "cook.wakeFallback": "Screen wake lock isn’t available. Keep this screen open while cooking.",
-  "cook.stepChanged": "Step {current} of {total}."
+  "cook.stepChanged": "Step {current} of {total}.",
+  "unit.cup": "cup",
+  "unit.tbsp": "tbsp",
+  "unit.tsp": "tsp",
+  "unit.flOz": "US fl oz"
 }

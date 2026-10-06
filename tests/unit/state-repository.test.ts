@@ -73,6 +73,19 @@ describe("StateRepository", () => {
     expect(second.recipes).toHaveLength(4);
   });
 
+  it("persists language and theme preferences across repository instances", () => {
+    const storage = new TestStorage();
+    const first = new RecipeController(new StateRepository(storage));
+
+    first.setLocale("fr");
+    first.setTheme("dark");
+
+    const second = new RecipeController(new StateRepository(storage));
+    expect(second.locale).toBe("fr");
+    expect(second.theme).toBe("dark");
+    expect(second.savedRecipe?.title).toBe("Crêpes de semaine");
+  });
+
   it("retains invalid stored data for recovery before restoring defaults", () => {
     const storage = new TestStorage();
     storage.setItem(STATE_KEY, '{"schemaVersion":99}');

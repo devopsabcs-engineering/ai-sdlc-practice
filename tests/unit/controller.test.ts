@@ -55,4 +55,15 @@ describe("RecipeController", () => {
       unit: "l",
     });
   });
+
+  it("persists locale and theme preferences independently", () => {
+    const controller = new RecipeController();
+
+    controller.setLocale("fr");
+    controller.setTheme("dark");
+
+    expect(controller.locale).toBe("fr");
+    expect(controller.theme).toBe("dark");
+    expect(controller.savedRecipe?.title).toBe("Crêpes de semaine");
+  });
 });

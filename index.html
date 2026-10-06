@@ -15,7 +15,26 @@
         <a class="brand" href="#main"
           ><span class="brand-mark" aria-hidden="true">P</span>Pinch</a
         >
-        <p class="tagline">Recipes, made to measure.</p>
+        <div class="header-tools">
+          <p class="tagline">Recipes, made to measure.</p>
+          <div
+            id="language-switcher"
+            class="language-switcher"
+            role="group"
+            aria-label="Language"
+          >
+            <button type="button" data-locale="en" aria-pressed="true">
+              EN
+            </button>
+            <button type="button" data-locale="fr" aria-pressed="false">
+              FR
+            </button>
+          </div>
+          <button id="theme-toggle" class="theme-toggle" type="button">
+            <span aria-hidden="true">◐</span>
+            <span id="theme-label">Dark</span>
+          </button>
+        </div>
       </div>
     </header>
     <main id="main" class="shell"></main>

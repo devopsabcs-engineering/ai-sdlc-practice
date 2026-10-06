@@ -12,6 +12,7 @@ import { convertToUnitSystem } from "./domain/unit-conversion.ts";
 import { createTranslator } from "./i18n/messages.ts";
 import { formatQuantity } from "./ui/format-quantity.ts";
 import { cookKeyboardAction, cookSwipeAction } from "./ui/cook-navigation.ts";
+import { resolveTheme, toggledTheme } from "./ui/theme.ts";
 import {
   ScreenWakeLock,
   type WakeLockNavigatorPort,
@@ -21,17 +22,32 @@ const controller = new RecipeController();
 const cookController = new CookController(
   new ScreenWakeLock(navigator as WakeLockNavigatorPort),
 );
-const t = createTranslator(controller.locale);
+let t = createTranslator(controller.locale);
 const root = document.querySelector<HTMLElement>("#main");
 if (!root) throw new Error("Application root not found.");
 
-document.documentElement.lang = controller.locale;
-document.title = "Pinch — " + t("app.tagline");
-document
-  .querySelector('meta[name="description"]')
-  ?.setAttribute("content", t("app.description"));
-const tagline = document.querySelector<HTMLElement>(".tagline");
-if (tagline) tagline.textContent = t("app.tagline");
+const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+const themeToggle = document.querySelector<HTMLButtonElement>("#theme-toggle")!;
+const themeLabel = document.querySelector<HTMLElement>("#theme-label")!;
+const languageSwitcher =
+  document.querySelector<HTMLElement>("#language-switcher")!;
+
+function currentTheme() {
+  return resolveTheme(controller.theme, colorScheme.matches);
+}
+
+function applyTheme(): void {
+  const theme = currentTheme();
+  document.documentElement.dataset.theme = theme;
+  const next = toggledTheme(theme);
+  themeToggle.setAttribute(
+    "aria-label",
+    t("preferences.theme", { theme: t(`preferences.${next}`) }),
+  );
+  themeLabel.textContent = t(`preferences.${next}`);
+}
+
+applyTheme();
 
 root.innerHTML = `
   <section class="intro" aria-labelledby="page-title">
@@ -145,6 +161,86 @@ const previousStep =
 const nextStep = document.querySelector<HTMLButtonElement>("#next-step")!;
 let cookOpener: HTMLButtonElement | null = null;
 
+function setText(selector: string, key: Parameters<typeof t>[0]): void {
+  const element = document.querySelector<HTMLElement>(selector);
+  if (element) element.textContent = t(key);
+}
+
+function localizeStaticUi(): void {
+  document.documentElement.lang = controller.locale;
+  document.title = "Pinch — " + t("app.tagline");
+  document
+    .querySelector('meta[name="description"]')
+    ?.setAttribute("content", t("app.description"));
+  const labels: [string, Parameters<typeof t>[0]][] = [
+    [".tagline", "app.tagline"],
+    [".intro .eyebrow", "intro.eyebrow"],
+    ["#page-title", "intro.title"],
+    [".intro .lede", "intro.lede"],
+    [".privacy-note strong", "intro.privacyTitle"],
+    [".library .eyebrow", "library.eyebrow"],
+    ["#library-title", "library.title"],
+    ["#new-recipe", "library.new"],
+    ["#export-data", "library.export"],
+    ["#choose-import", "library.import"],
+    ["#clear-data", "library.clear"],
+    [".editor .eyebrow", "editor.eyebrow"],
+    ["#editor-title", "editor.title"],
+    [".required-note", "editor.required"],
+    ['label[for="title"]', "editor.recipeTitle"],
+    ['label[for="base-servings"]', "editor.baseServings"],
+    ["#baseServings-hint", "editor.baseHint"],
+    ['label[for="ingredients"]', "editor.ingredients"],
+    ["#ingredients-hint", "editor.ingredientsHint"],
+    ['label[for="steps"]', "editor.method"],
+    ["#steps-hint", "editor.methodHint"],
+    ['#recipe-form button[type="submit"]', "editor.save"],
+    ["#empty-preview h2", "preview.emptyTitle"],
+    ["#empty-preview p", "preview.emptyBody"],
+    [".shopping .eyebrow", "shopping.eyebrow"],
+    ["#shopping-title", "shopping.title"],
+    ["#clear-checked", "shopping.clearChecked"],
+    [".cook-header .eyebrow", "cook.mode"],
+    ["#close-cook", "cook.close"],
+    ["#previous-step", "cook.previous"],
+  ];
+  labels.forEach(([selector, key]) => setText(selector, key));
+  const privacy = document.querySelector<HTMLElement>(".privacy-note");
+  if (privacy) {
+    privacy.innerHTML = `<strong>${t("intro.privacyTitle")}</strong><br>${t("intro.privacyBody")}`;
+  }
+  const ingredients =
+    document.querySelector<HTMLTextAreaElement>("#ingredients");
+  const steps = document.querySelector<HTMLTextAreaElement>("#steps");
+  if (ingredients) ingredients.placeholder = t("editor.ingredientsPlaceholder");
+  if (steps) steps.placeholder = t("editor.methodPlaceholder");
+  (["title", "baseServings", "ingredients", "steps"] as const).forEach(
+    (field) => {
+      const input = form.elements.namedItem(field);
+      const error = document.querySelector<HTMLElement>(`#${field}-error`);
+      if (
+        error &&
+        input instanceof HTMLElement &&
+        input.getAttribute("aria-invalid") === "true"
+      ) {
+        error.textContent = t(`error.${field}`);
+      }
+    },
+  );
+  languageSwitcher.setAttribute("aria-label", t("preferences.language"));
+  languageSwitcher
+    .querySelectorAll<HTMLButtonElement>("[data-locale]")
+    .forEach((button) => {
+      const locale = button.dataset.locale;
+      button.setAttribute("aria-pressed", String(locale === controller.locale));
+      button.setAttribute(
+        "aria-label",
+        t(locale === "fr" ? "preferences.french" : "preferences.english"),
+      );
+    });
+  applyTheme();
+}
+
 function escapeHtml(value: string): string {
   const element = document.createElement("span");
   element.textContent = value;
@@ -152,7 +248,16 @@ function escapeHtml(value: string): string {
 }
 
 function formatAmount(quantity: number, unit: SupportedUnit | null): string {
-  const unitLabel = unit === "fl oz" ? "US fl oz" : unit;
+  const unitLabel =
+    unit === "fl oz"
+      ? t("unit.flOz")
+      : unit === "cup"
+        ? t("unit.cup")
+        : unit === "tbsp"
+          ? t("unit.tbsp")
+          : unit === "tsp"
+            ? t("unit.tsp")
+            : unit;
   return `${formatQuantity(quantity, unit, controller.locale)}${unitLabel ? ` ${unitLabel}` : ""}`;
 }
 
@@ -548,6 +653,8 @@ document
       status.textContent = t("library.importError");
       return;
     }
+    t = createTranslator(controller.locale);
+    localizeStaticUi();
     renderSelection();
     renderShopping();
     status.textContent = t("library.imported");
@@ -556,9 +663,53 @@ document
 document.querySelector("#clear-data")?.addEventListener("click", () => {
   if (!window.confirm(t("library.clearConfirm"))) return;
   controller.clearAll();
+  t = createTranslator(controller.locale);
+  localizeStaticUi();
   renderSelection();
   renderShopping();
   status.textContent = t("library.cleared");
+});
+
+languageSwitcher.addEventListener("click", (event) => {
+  const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+    "button[data-locale]",
+  );
+  const locale = button?.dataset.locale;
+  if ((locale !== "en" && locale !== "fr") || locale === controller.locale)
+    return;
+
+  const draft = readDraft();
+  const displayedRecipe = controller.savedRecipe;
+  const displayedDraft = displayedRecipe
+    ? recipeToDraft(displayedRecipe)
+    : undefined;
+  const followsSelectedRecipe =
+    displayedDraft !== undefined &&
+    JSON.stringify(draft) === JSON.stringify(displayedDraft);
+
+  controller.setLocale(locale);
+  t = createTranslator(controller.locale);
+  localizeStaticUi();
+  renderLibrary();
+  renderRecipe();
+  renderShopping();
+  if (followsSelectedRecipe && controller.savedRecipe) {
+    writeDraft(recipeToDraft(controller.savedRecipe));
+  }
+  status.textContent = t("preferences.languageChanged");
+});
+
+themeToggle.addEventListener("click", () => {
+  const next = toggledTheme(currentTheme());
+  controller.setTheme(next);
+  applyTheme();
+  status.textContent = t("preferences.themeChanged", {
+    theme: t(`preferences.${next}`),
+  });
+});
+
+colorScheme.addEventListener("change", () => {
+  if (controller.theme === "system") applyTheme();
 });
 
 shoppingList.addEventListener("change", (event) => {
@@ -647,6 +798,7 @@ document.addEventListener("visibilitychange", () => {
   });
 });
 
+localizeStaticUi();
 renderSelection();
 renderShopping();
 if (controller.recoveredOnLoad) status.textContent = t("library.recovered");

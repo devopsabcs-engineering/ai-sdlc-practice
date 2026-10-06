@@ -1,6 +1,14 @@
 {
   "app.description": "Créez, enregistrez et redimensionnez des recettes sur cet appareil.",
   "app.tagline": "Des recettes sur mesure.",
+  "preferences.language": "Langue",
+  "preferences.english": "English",
+  "preferences.french": "Français",
+  "preferences.theme": "Utiliser le thème {theme}",
+  "preferences.light": "clair",
+  "preferences.dark": "sombre",
+  "preferences.languageChanged": "Langue changée au français.",
+  "preferences.themeChanged": "Thème {theme} activé.",
   "intro.eyebrow": "Atelier de recettes",
   "intro.title": "Adaptez la recette à votre tablée.",
   "intro.lede": "Écrivez-la une fois, puis choisissez exactement le nombre de personnes.",
@@ -82,5 +90,9 @@
   "cook.progress": "Étape {current} sur {total}",
   "cook.wakeActive": "L’écran restera allumé tant que le mode cuisine est ouvert.",
   "cook.wakeFallback": "Le maintien de l’écran allumé n’est pas disponible. Gardez cet écran ouvert pendant la cuisson.",
-  "cook.stepChanged": "Étape {current} sur {total}."
+  "cook.stepChanged": "Étape {current} sur {total}.",
+  "unit.cup": "tasse",
+  "unit.tbsp": "c. à soupe",
+  "unit.tsp": "c. à thé",
+  "unit.flOz": "oz liq. US"
 }

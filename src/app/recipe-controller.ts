@@ -3,6 +3,7 @@ import {
   type LibraryRecipe,
   type Locale,
   type PersistedStateV1,
+  type ThemePreference,
 } from "../domain/library.ts";
 import {
   scaleQuantity,
@@ -106,6 +107,10 @@ export class RecipeController {
     return this.#state.preferences.unitSystem;
   }
 
+  get theme(): ThemePreference {
+    return this.#state.preferences.theme;
+  }
+
   get shoppingItems() {
     return this.#state.shoppingItems;
   }
@@ -197,6 +202,22 @@ export class RecipeController {
     this.#commit({
       ...this.#state,
       preferences: { ...this.#state.preferences, unitSystem: value },
+    });
+  }
+
+  setLocale(value: Locale): void {
+    if (value === this.#state.preferences.locale) return;
+    this.#commit({
+      ...this.#state,
+      preferences: { ...this.#state.preferences, locale: value },
+    });
+  }
+
+  setTheme(value: ThemePreference): void {
+    if (value === this.#state.preferences.theme) return;
+    this.#commit({
+      ...this.#state,
+      preferences: { ...this.#state.preferences, theme: value },
     });
   }
 
