@@ -67,7 +67,7 @@ root.innerHTML = `
     <div class="data-tools">
       <button id="export-data" class="text-button" type="button">${t("library.export")}</button>
       <button id="choose-import" class="text-button" type="button">${t("library.import")}</button>
-      <input id="import-data" class="sr-only" type="file" accept="application/json,.json" tabindex="-1">
+      <input id="import-data" class="sr-only" type="file" accept="application/json,.json" tabindex="-1" aria-label="${t("library.import")}">
       <button id="clear-data" class="text-button danger" type="button">${t("library.clear")}</button>
     </div>
   </section>
@@ -214,6 +214,9 @@ function localizeStaticUi(): void {
   const steps = document.querySelector<HTMLTextAreaElement>("#steps");
   if (ingredients) ingredients.placeholder = t("editor.ingredientsPlaceholder");
   if (steps) steps.placeholder = t("editor.methodPlaceholder");
+  document
+    .querySelector<HTMLInputElement>("#import-data")
+    ?.setAttribute("aria-label", t("library.import"));
   (["title", "baseServings", "ingredients", "steps"] as const).forEach(
     (field) => {
       const input = form.elements.namedItem(field);
