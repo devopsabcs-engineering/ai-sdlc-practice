@@ -4,24 +4,47 @@ on:
   workflow_dispatch:
     inputs:
       governance_approved:
-        description: Confirm Product Owner, Security Team, and Tech Lead sign-off is recorded
+        description: Confirm Product Owner, Security Team, and Tech Lead approval
         required: true
-        type: boolean
         default: false
+        type: boolean
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  quality:
+    name: Quality checks
     if: ${{ inputs.governance_approved }}
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run unit
+      - run: npm run i18n-parity
+      - run: npm run portable-os
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - run: npm run performance
+      - run: npm audit --omit=dev --audit-level=high
+
+  build-pages-artifact:
+    name: Build immutable Pages artifact
+    needs: quality
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,9 +58,13 @@ jobs:
         with:
           path: dist
 
-  deploy:
-    needs: build
+  deploy-pages:
+    name: Deploy Pages
+    needs: build-pages-artifact
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
