@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#243c73" />
+    <meta
+      name="description"
+      content="Create a recipe and scale its ingredients to the servings you need."
+    />
+    <title>Pinch — Recipe scaler</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="#main"
+          ><span class="brand-mark" aria-hidden="true">P</span>Pinch</a
+        >
+        <div class="header-tools">
+          <p class="tagline">Recipes, made to measure.</p>
+          <div
+            id="language-switcher"
+            class="language-switcher"
+            role="group"
+            aria-label="Language"
+          >
+            <button type="button" data-locale="en" aria-pressed="true">
+              EN
+            </button>
+            <button type="button" data-locale="fr" aria-pressed="false">
+              FR
+            </button>
+          </div>
+          <button id="theme-toggle" class="theme-toggle" type="button">
+            <span aria-hidden="true">◐</span>
+            <span id="theme-label">Dark</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main id="main" class="shell"></main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
